@@ -39,7 +39,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cgrates/mgo"
+	"github.com/irontec/mgo"
 	. "gopkg.in/check.v1"
 )
 

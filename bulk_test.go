@@ -27,7 +27,7 @@
 package mgo_test
 
 import (
-	mgo "github.com/cgrates/mgo"
+	mgo "github.com/irontec/mgo"
 	. "gopkg.in/check.v1"
 )
 

@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	mgo "github.com/cgrates/mgo"
-	"github.com/cgrates/mgo/bson"
-	"github.com/cgrates/mgo/dbtest"
-	"github.com/cgrates/mgo/txn"
+	mgo "github.com/irontec/mgo"
+	"github.com/irontec/mgo/bson"
+	"github.com/irontec/mgo/dbtest"
+	"github.com/irontec/mgo/txn"
 	. "gopkg.in/check.v1"
 )
 

@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"time"
 
-	"github.com/cgrates/mgo/bson"
+	"github.com/irontec/mgo/bson"
 	. "gopkg.in/check.v1"
 )
 

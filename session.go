@@ -44,7 +44,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cgrates/mgo/bson"
+	"github.com/irontec/mgo/bson"
 )
 
 // Mode read preference mode. See Eventual, Monotonic and Strong for details
