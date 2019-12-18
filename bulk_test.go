@@ -27,8 +27,8 @@
 package mgo_test
 
 import (
+	mgo "github.com/cgrates/mgo"
 	. "gopkg.in/check.v1"
-	"gopkg.in/mgo.v2"
 )
 
 func (s *S) TestBulkInsert(c *C) {
@@ -64,7 +64,7 @@ func (s *S) TestBulkInsertError(c *C) {
 	c.Assert(mgo.IsDup(err), Equals, true)
 
 	type doc struct {
-		N int `_id`
+		N int `bson:"_id"`
 	}
 	var res []doc
 	err = coll.Find(nil).Sort("_id").All(&res)
@@ -85,7 +85,7 @@ func (s *S) TestBulkInsertErrorUnordered(c *C) {
 	c.Assert(err, ErrorMatches, ".*duplicate key.*")
 
 	type doc struct {
-		N int `_id`
+		N int `bson:"_id"`
 	}
 	var res []doc
 	err = coll.Find(nil).Sort("_id").All(&res)
@@ -110,7 +110,7 @@ func (s *S) TestBulkInsertErrorUnorderedSplitBatch(c *C) {
 
 	const total = 4096
 	type doc struct {
-		Id int `_id`
+		Id int `bson:"_id"`
 	}
 	docs := make([]interface{}, total)
 	for i := 0; i < total; i++ {
@@ -315,6 +315,28 @@ func (s *S) TestBulkUpdate(c *C) {
 	err = coll.Find(nil).Sort("n").All(&res)
 	c.Assert(err, IsNil)
 	c.Assert(res, DeepEquals, []doc{{10}, {20}, {30}})
+}
+
+func (s *S) TestBulkUpdateOver1000(c *C) {
+	session, err := mgo.Dial("localhost:40001")
+	c.Assert(err, IsNil)
+	defer session.Close()
+
+	coll := session.DB("mydb").C("mycoll")
+
+	bulk := coll.Bulk()
+	for i := 0; i < 1010; i++ {
+		bulk.Insert(M{"n": i})
+	}
+	_, err = bulk.Run()
+	c.Assert(err, IsNil)
+	bulk = coll.Bulk()
+	for i := 0; i < 1010; i++ {
+		bulk.Update(M{"n": i}, M{"$set": M{"m": i}})
+	}
+	// if not handle well, mongo will return error here
+	_, err = bulk.Run()
+	c.Assert(err, IsNil)
 }
 
 func (s *S) TestBulkUpdateError(c *C) {

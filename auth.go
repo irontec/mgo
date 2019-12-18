@@ -34,8 +34,8 @@ import (
 	"fmt"
 	"sync"
 
-	"gopkg.in/mgo.v2/bson"
-	"gopkg.in/mgo.v2/internal/scram"
+	"github.com/cgrates/mgo/bson"
+	"github.com/cgrates/mgo/internal/scram"
 )
 
 type authCmd struct {
@@ -61,7 +61,7 @@ type getNonceCmd struct {
 
 type getNonceResult struct {
 	Nonce string
-	Err   string "$err"
+	Err   string `bson:"$err"`
 	Code  int
 }
 

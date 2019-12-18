@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
+	mgo "github.com/cgrates/mgo"
 	. "gopkg.in/check.v1"
 
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/dbtest"
+	"github.com/cgrates/mgo/dbtest"
 )
 
 type M map[string]interface{}
@@ -78,6 +78,8 @@ func (s *S) TestStop(c *C) {
 
 	// Server should not be running anymore.
 	session, err = mgo.DialWithTimeout(addr, 500*time.Millisecond)
+	c.Assert(err, IsNil)
+
 	if session != nil {
 		session.Close()
 		c.Fatalf("Stop did not stop the server")

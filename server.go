@@ -33,7 +33,7 @@ import (
 	"sync"
 	"time"
 
-	"gopkg.in/mgo.v2/bson"
+	"github.com/cgrates/mgo/bson"
 )
 
 // ---------------------------------------------------------------------------
@@ -46,15 +46,15 @@ type mongoServer struct {
 	tcpaddr       *net.TCPAddr
 	unusedSockets []*mongoSocket
 	liveSockets   []*mongoSocket
-	closed        bool
-	abended       bool
 	sync          chan bool
 	dial          dialer
 	pingValue     time.Duration
 	pingIndex     int
-	pingCount     uint32
 	pingWindow    [6]time.Duration
 	info          *mongoServerInfo
+	pingCount     uint32
+	closed        bool
+	abended       bool
 }
 
 type dialer struct {
@@ -143,7 +143,6 @@ func (server *mongoServer) AcquireSocket(poolLimit int, timeout time.Duration) (
 		}
 		return
 	}
-	panic("unreachable")
 }
 
 // Connect establishes a new connection to the server. This should
@@ -187,6 +186,16 @@ func (server *mongoServer) Connect(timeout time.Duration) (*mongoSocket, error) 
 // Close forces closing all sockets that are alive, whether
 // they're currently in use or not.
 func (server *mongoServer) Close() {
+	server.close(false)
+}
+
+// CloseIdle closing all sockets that are idle,
+// sockets currently in use will be closed after idle.
+func (server *mongoServer) CloseIdle() {
+	server.close(true)
+}
+
+func (server *mongoServer) close(waitForIdle bool) {
 	server.Lock()
 	server.closed = true
 	liveSockets := server.liveSockets
@@ -196,7 +205,11 @@ func (server *mongoServer) Close() {
 	server.Unlock()
 	logf("Connections to %s closing (%d live sockets).", server.Addr, len(liveSockets))
 	for i, s := range liveSockets {
-		s.Close()
+		if waitForIdle {
+			s.CloseAfterIdle()
+		} else {
+			s.Close()
+		}
 		liveSockets[i] = nil
 	}
 	for i := range unusedSockets {
@@ -292,7 +305,7 @@ func (server *mongoServer) pinger(loop bool) {
 	}
 	op := queryOp{
 		collection: "admin.$cmd",
-		query:      bson.D{{"ping", 1}},
+		query:      bson.D{{Name: "ping", Value: 1}},
 		flags:      flagSlaveOk,
 		limit:      -1,
 	}
@@ -305,7 +318,7 @@ func (server *mongoServer) pinger(loop bool) {
 		if err == nil {
 			start := time.Now()
 			_, _ = socket.SimpleQuery(&op)
-			delay := time.Now().Sub(start)
+			delay := time.Since(start)
 
 			server.pingWindow[server.pingIndex] = delay
 			server.pingIndex = (server.pingIndex + 1) % len(server.pingWindow)
